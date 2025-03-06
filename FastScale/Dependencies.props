@@ -7,8 +7,6 @@
 
 	<!--Plugin Metadata-->
 	<PropertyGroup>
-		<GameFolder>C:\Program Files (x86)\Steam\steamapps\common\My dream setup\MDS</GameFolder>
-
 		<PluginName>MoveBindings</PluginName>
 		<AssemblyName>$(PluginName)</AssemblyName>
 		<Version>1.0.0</Version>
@@ -37,6 +35,10 @@
 		<Reference Remove="$(ManagedFolder)\netstandard.dll" />
 	</ItemGroup>
 
+	<!--Using publicized dlls, => https://github.com/BepInEx/BepInEx.AssemblyPublicizer-->
+	<PropertyGroup Condition="Exists('$(ManagedFolder)\Assembly-CSharp_publicized.dll')">
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
 	<ItemGroup Condition="Exists('$(ManagedFolder)\Assembly-CSharp_publicized.dll')">
 		<Reference Remove="$(ManagedFolder)\Assembly-CSharp.dll"/>
 	</ItemGroup>

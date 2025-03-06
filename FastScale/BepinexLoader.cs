@@ -29,7 +29,7 @@ namespace FastScale
         {
             Log = Logger;
             ScaleExpanderHarmony.PatchAll(typeof(ObjectSelectingPatches));
-            Logger.LogWarning("UwU");
+            UnityEngine.Object.DontDestroyOnLoad(this);
         }
 
         public void Update()
@@ -40,10 +40,7 @@ namespace FastScale
                 _currentObject = CurrentSelectedObject.transform;
                 LogManager.Message($"New object selected {_currentObject.name}");
             }
-        }
 
-        public void FixedUpdate()
-        {
             if (_currentObject is null)
                 return;
 
@@ -108,20 +105,40 @@ namespace FastScale
             }
 
             if (BothPressed(new[] { KeyCode.RightShift, KeyCode.Keypad0 }, new[] { KeyCode.Keypad4, KeyCode.L })
-                || CheckPressed(new[] {KeyCode.Keypad4, KeyCode.L}))
+                || CheckPressed(new[] { KeyCode.Keypad4, KeyCode.L }))
             {
                 //scale down
                 var vec = _currentObject.transform.localScale;
-                _currentObject.localScale = new Vector3(vec.x - 0.3f, vec.y- 0.3f, vec.z - 0.3f);
+                _currentObject.localScale = new Vector3(vec.x - 0.3f, vec.y - 0.3f, vec.z - 0.3f);
             }
 
             //rotate
 
-            //if(Input.GetKeyDown(KeyCode.UpArrow))
-            //{
-            //    var vec = _currentObject.transform.localRotation;
-            //    _currentObject.localRotation = new Vector3(vec.x  0.3f, vec.y - 0.3f, vec.z - 0.3f);
-            //}
+            if (CheckPressed(new[] { KeyCode.UpArrow }))
+            {
+                var vec = _currentObject.transform.localRotation;
+                _currentObject.Rotate(vec.eulerAngles.x * -1, 0, 5f, Space.Self);
+            }
+
+            if (CheckPressed(new[] { KeyCode.RightArrow }))
+            {
+                var vec = _currentObject.transform.localRotation;
+                //funny stuff happens, when x axis is over 90, since the z axis goes to 180 in that case.
+                _currentObject.Rotate(5f, 0, (vec.eulerAngles.z != 180f ? vec.eulerAngles.z : 0f) * -1, Space.Self);
+            }
+
+            if (CheckPressed(new[] { KeyCode.DownArrow }))
+            {
+                var vec = _currentObject.transform.localRotation;
+                _currentObject.Rotate(vec.eulerAngles.x * -1, 0, -5f, Space.Self);
+            }
+
+            if (CheckPressed(new[] { KeyCode.LeftArrow }))
+            {
+                var vec = _currentObject.transform.localRotation;
+                //funny stuff happens, when z axis is over 90, since the x axis goes to 180 in that case.
+                _currentObject.Rotate(-5f, 0, (vec.eulerAngles.z != 180f ? vec.eulerAngles.z : 0f) * -1, Space.Self);
+            }
         }
 
         private bool BothPressed(KeyCode[] firstButton, KeyCode[] second)

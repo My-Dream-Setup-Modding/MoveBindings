@@ -15,8 +15,7 @@ namespace FastScale.Patches
         [HarmonyPostfix]
         public static void SelectObjectPostfix(ObjectSelecting __instance)
         {
-            var test = typeof(ObjectSelecting).GetField(nameof(ObjectSelecting._selectedObject), BindingFlags.NonPublic | BindingFlags.Instance).GetValue(__instance);
-            BepinexLoader.CurrentSelectedObject = (GameObject) test;
+            BepinexLoader.CurrentSelectedObject = __instance._selectedObject;
             LogManager.Message($"New object selected {BepinexLoader.CurrentSelectedObject?.name ?? "null"}");
         }
 
