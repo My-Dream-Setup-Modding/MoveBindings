@@ -1,10 +1,8 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using FastScale.Patches;
 using HarmonyLib;
-using Placing;
-using Sirenix.Utilities;
-using System;
 using System.Linq;
 using UnityEngine;
 
@@ -24,12 +22,15 @@ namespace FastScale
         public static GameObject CurrentSelectedObject { get; set; }
 
         private Transform _currentObject;
+        private ConfigEntry<bool> _slowPc;
 
         public void Awake()
         {
             Log = Logger;
             ScaleExpanderHarmony.PatchAll(typeof(ObjectSelectingPatches));
             UnityEngine.Object.DontDestroyOnLoad(this);
+
+            _slowPc = Config.Bind<bool>("Performance", "60 UpdateCycles", false, "If set to true, check for keys 60 times a second instead of every frame. Might be better for games running slower than 60fps.");
         }
 
         public void Update()
@@ -41,6 +42,18 @@ namespace FastScale
                 LogManager.Message($"New object selected {_currentObject.name}");
             }
 
+            if (!_slowPc.Value)
+                CustomUpdate();
+        }
+
+        public void FixedUpdate()
+        {
+            if (_slowPc.Value)
+                CustomUpdate();
+        }
+
+        private void CustomUpdate()
+        {
             if (_currentObject is null)
                 return;
 
@@ -116,28 +129,45 @@ namespace FastScale
 
             if (CheckPressed(new[] { KeyCode.UpArrow }))
             {
-                var vec = _currentObject.transform.localRotation;
-                _currentObject.Rotate(vec.eulerAngles.x * -1, 0, 5f, Space.Self);
+                //var vec = _currentObject.transform.localRotation;
+                //_currentObject.Rotate(vec.eulerAngles.x * -1, 0, 5f, Space.Self);
+
+                var vec = _currentObject.transform.eulerAngles;
+                _currentObject.eulerAngles = new Vector3(0, vec.y, vec.z + 5f);
             }
 
             if (CheckPressed(new[] { KeyCode.RightArrow }))
             {
-                var vec = _currentObject.transform.localRotation;
-                //funny stuff happens, when x axis is over 90, since the z axis goes to 180 in that case.
-                _currentObject.Rotate(5f, 0, (vec.eulerAngles.z != 180f ? vec.eulerAngles.z : 0f) * -1, Space.Self);
+                //var vec = _currentObject.transform.localRotation;
+                //_currentObject.Rotate(5f, 0, vec.eulerAngles.z % 180 * -1, Space.Self);
+
+                var vec = _currentObject.transform.eulerAngles;
+                if (vec.z % 180 != 0)
+                    _currentObject.eulerAngles = new Vector3(vec.x, vec.y, 0f);
+
+                _currentObject.Rotate(5f, 0, 0);
             }
 
             if (CheckPressed(new[] { KeyCode.DownArrow }))
             {
-                var vec = _currentObject.transform.localRotation;
-                _currentObject.Rotate(vec.eulerAngles.x * -1, 0, -5f, Space.Self);
+                //var vec = _currentObject.transform.localRotation;
+                //_currentObject.Rotate(vec.eulerAngles.x * -1, 0, -5f, Space.Self);
+
+                var vec = _currentObject.transform.eulerAngles;
+                _currentObject.eulerAngles = new Vector3(0, vec.y, vec.z - 5f);
             }
 
             if (CheckPressed(new[] { KeyCode.LeftArrow }))
             {
-                var vec = _currentObject.transform.localRotation;
-                //funny stuff happens, when z axis is over 90, since the x axis goes to 180 in that case.
-                _currentObject.Rotate(-5f, 0, (vec.eulerAngles.z != 180f ? vec.eulerAngles.z : 0f) * -1, Space.Self);
+                //var vec = _currentObject.transform.localRotation;
+                //_currentObject.Rotate(-5f, 0, vec.eulerAngles.z % 180 * -1, Space.Self);
+                var vec = _currentObject.transform.eulerAngles;
+
+
+                if (vec.z % 180 != 0)
+                    _currentObject.eulerAngles = new Vector3(vec.x, vec.y, 0f);
+
+                _currentObject.Rotate(-5f, 0, 0);
             }
         }
 
@@ -148,14 +178,6 @@ namespace FastScale
 
         private bool CheckPressed(KeyCode[] button)
         {
-            //for(int i = 0; i < 2; i++)
-            //{
-            //    if (Input.GetKeyDown(button[i]))
-            //        return true;
-            //}
-
-            //return false;
-
             return button.Select(x => Input.GetKeyDown(x)).Any(x => x);
         }
     }
